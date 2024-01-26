@@ -33,7 +33,7 @@ function executeCommand(fileName){
 
         // Show the output channel
       
-        outputChannel.show();
+        // outputChannel.show();
         
    
     console.log(fileName);
@@ -169,7 +169,7 @@ function runFile(fileName){
             outputChannel.appendLine("Developed by Pradeep Sahu");
             outputChannel.appendLine("Link: https://www.linkedin.com/in/pradeep-sahu-759720224/");
                 // Show the output channel
-            outputChannel.show();
+            // outputChannel.show();
         })});
 
    
