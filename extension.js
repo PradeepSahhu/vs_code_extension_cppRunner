@@ -220,8 +220,38 @@ function activate(context) {
     let another = vscode.commands.registerCommand('c-c---code-runner-for-mac.c_c++CodeDelete',function(){
         deleteCurrentFile();
 
-    })
+    });
 
+    let other = vscode.commands.registerCommand('c-c---code-runner-for-mac.c_c++CodeCopy',async function(){
+        await copyFile();
+
+    //     const editor = vscode.window.activeTextEditor;
+    //     const document = editor.document;
+    //     const currentFilePath = document.uri.fsPath;
+
+    // // Read the content of the current file
+    //     const fileContent = fs.readFile(currentFilePath, 'utf-8');
+
+    //     const newFileName = await vscode.window.showInputBox({
+    //         prompt: 'Enter the new file name (without extension)',
+    //         value: 'newFile',
+    //     });
+
+    //     if (newFileName) {
+    //         // Derive the new file path
+    //         const newFilePath = currentFilePath.replace(document.fileName, newFileName);
+
+    //         // Write the content to the new file
+    //         fs.writeFile(newFilePath, fileContent, 'utf-8');
+
+    //         // Open the new file
+    //         const doc = vscode.workspace.openTextDocument(newFilePath);
+    //         vscode.window.showTextDocument(doc);
+    //     }
+
+        
+
+    });
    
 
 	// context.subscriptions.push(disposable);
@@ -259,6 +289,70 @@ function deleteCurrentFile() {
 
 // This method is called when your extension is deactivated
 function deactivate() {}
+
+async function copyFile(){
+
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+        const document = editor.document;
+        const currentFilePath = document.uri.fsPath;
+
+        var filedata;
+    // Read the content of the current file
+        const fileContent = fs.readFile(currentFilePath, 'utf-8',(err, fileContent) => {
+            if (err) {
+                console.error(`Error reading file: ${err.message}`);
+            } else {
+                // Handle fileContent here
+                console.log('File content:', fileContent);
+                filedata = fileContent;
+                // return fileContent;
+                
+            }
+        });
+
+        console.log(fileContent);
+
+        const newFileName = await vscode.window.showInputBox({
+            prompt: 'Enter the new file name (without extension)',
+            value: '',
+        });
+
+        if (newFileName) {
+            // Derive the new file path
+            // const newFilePath = currentFilePath.replace(document.fileName, newFileName);
+            const newFilePath = path.join(path.dirname(currentFilePath), newFileName);
+
+            // Write the content to the new file
+            fs.writeFile(newFilePath, filedata, 'utf-8',(err)=>{
+                if(err){
+                    console.error("Error")
+                }else{
+                    console.log("File written");
+                }
+            });
+
+            // Open the new file
+            const doc = vscode.workspace.openTextDocument(newFilePath);
+            vscode.window.showTextDocument(doc);
+        }
+    } else {
+        vscode.window.showWarningMessage('No active text editor.');
+    }
+
+    
+
+
+}
+
+async function createNewFile(filePath, content) {
+    try {
+        await fs.writeFile(filePath, content, 'utf-8');
+        console.log(`File created successfully at: ${filePath}`);
+    } catch (err) {
+        throw new Error(`Error creating file: ${err.message}`);
+    }
+}
 
 
 
