@@ -3,10 +3,11 @@
   "displayName": "c/c++ code runner for mac",
   "description": "Sometimes latest c/c++ code doesn't work on macbooks hence create this to execute the latest c/c++ code in visual studio code. ",
   "publisher": "MacCodeRunner",
-  "version": "0.0.1",
+  "version": "1.1.1",
   "engines": {
-    "vscode": "^1.80.0"
+    "vscode": "^1.82.0"
   },
+
   "categories": [
     "Other"
   ],
@@ -39,10 +40,10 @@
   "icon": "./cimage.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Mubashar-javed/quick-snippets"
+    "url": "https://github.com/PradeepSahhu/vs_code_extension_cppRunner"
   },
   "devDependencies": {
-    "@types/vscode": "^1.85.0",
+    "@types/vscode": "^1.82.0",
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
     "eslint": "^8.56.0",
