@@ -1,71 +1,52 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
+const util = require('util');
 const { exec } = require('child_process');
 const path = require('path');
-const simpleGit = require('simple-git');
 const fs = require('fs');
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 
-/**
- * @param {vscode.ExtensionContext} context
- */
+function runTheCode(){
+
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+        const document = editor.document;
+        const fileName = editor.document.fileName;
+        executeCommand(fileName);
+    } else {
+        vscode.window.showWarningMessage('No active text editor.');
+    }
+
+}
 
 async function executeCommand(fileName) {
-    const editor = vscode.window.activeTextEditor;
-    const outputChannel = vscode.window.createOutputChannel('My Extension Output');
-    const fileWithoutExtension = await removeExtensionFromFilePath(fileName);
-    const commandToExecute = `g++ -std=c++11 ${fileName} -o ${fileWithoutExtension}`;
-
-    // Append a message to the output channel
-    outputChannel.appendLine("Developed By Pradeep Sahu");
-    outputChannel.appendLine("Link : https://www.linkedin.com/in/pradeep-sahu-759720224/")
-
-    console.log(fileName);
-
-    // Execute the command
     try {
-        const { stdout, stderr } = await new Promise((resolve, reject) => {
-            exec(commandToExecute, (error, stdout, stderr) => {
-                if (error) {
-                    console.error(`Error executing command: ${error.message}`);
-                    reject(error);
-                } else {
-                    console.log(`Command stdout: ${stdout}`);
-                    console.error(`Command stderr: ${stderr}`);
-                    resolve({ stdout, stderr });
-                }
-            });
-        });
+        const outputChannel = vscode.window.createOutputChannel('My Extension Output');
+        const fileWithoutExtension = await removeExtensionFromFilePath(fileName);
+        const commandToExecute = `g++ -std=c++11 ${fileName} -o ${fileWithoutExtension}`;
 
-        // Check if there's any stderr
+        // outputChannel.appendLine("Developed By Pradeep Sahu");
+        // outputChannel.appendLine("Link : https://www.linkedin.com/in/pradeep-sahu-759720224/");
+        // outputChannel.show();
+
+        // console.log(fileName + "And " + fileWithoutExtension);
+
+        const { stdout, stderr } = await util.promisify(exec)(commandToExecute);
+
         if (stderr) {
-            console.error(`Command stderr: ${stderr}`);
+            outputChannel.appendLine(`Command stderr: ${stderr}`);
             return;
         }
 
-        // If successful, run the file
         runFile(fileName);
     } catch (error) {
         console.error(`Error executing command: ${error.message}`);
     }
 }
 
-
-function moveToDirectory(filePath){
-
-    const uri = vscode.Uri.file(filePath);
-    const commandToExecute = `cd "${uri.fsPath}"`;
-
-    // const editor = vscode.window.activeTextEditor;
-
-    // const fileName = path.basename(editor.document.fileName, path.extname(editor.document.fileName));
-	// const commandToExecute = `cd ${filePath}/`;
-
-    // Execute the command
-
+async function moveToDirectory(filePath) {
+    const commandToExecute = `cd "${filePath}"`;
     exec(commandToExecute, (error, stdout, stderr) => {
         if (error) {
             console.error(`Error executing command: ${error.message}`);
@@ -77,92 +58,42 @@ function moveToDirectory(filePath){
         }
         console.log(`Command stdout: ${stdout}`);
     });
-
-    // executeCommand(fileName);
-
 }
 
 function removeExtensionFromFilePath(filePath) {
     const directory = path.dirname(filePath);
     const filenameWithoutExtension = path.basename(filePath, path.extname(filePath));
-    const filePathWithoutExtension = path.join(directory, filenameWithoutExtension);
-    return filePathWithoutExtension;
-}
-
-function checkForKeywordInFile(filePath, keyword) {
-    try {
-        // Read the content of the file
-        const fileContent = fs.readFileSync(filePath, 'utf-8');
-
-        // Check if the keyword is present in the file content
-        const isKeywordPresent = fileContent.includes(keyword);
-
-        return isKeywordPresent;
-    } catch (error) {
-        vscode.window.showErrorMessage(`Error reading file: ${error.message}`);
-        return false;
-    }
+    return path.join(directory, filenameWithoutExtension);
 }
 
 async function executeCommandInTerminal(command) {
     try {
-        // Check if a terminal with the name 'MyExtensionTerminal' exists
         let terminal = vscode.window.terminals.find(term => term.name === 'TerminalSahu');
-
-        // If no terminal exists, create a new one
         if (!terminal) {
             terminal = vscode.window.createTerminal('TerminalSahu');
         }
-
-        // Send the command to the terminal
         terminal.sendText(command);
-
-        // Show and focus the terminal
         terminal.show();
     } catch (error) {
-        vscode.window.showErrorMessage(`Error executing command: ${error.message}`);
+        console.error(`Error executing command: ${error.message}`);
+    }
+}
+
+async function runFile(fileName) {
+    try {
+        const fileNameWithout = removeExtensionFromFilePath(fileName);
+        const commandToExecute = `${fileNameWithout}`;
+        console.log(fileNameWithout + " And " + commandToExecute);
+        await executeCommandInTerminal(commandToExecute);
+        const outputChannel = vscode.window.createOutputChannel('My Extension Output');
+    } catch (error) {
+        console.error(`Error running file: ${error.message}`);
     }
 }
 
 
-function runFile(fileName){
-    
-    const fileNameWithout = removeExtensionFromFilePath(fileName)
-    const commandToExecute = ` ${fileNameWithout}`;
-    executeCommandInTerminal(commandToExecute);
-  
-        
-        const outputChannel = vscode.window.createOutputChannel('My Extension Output');
 
-        // const terminal = vscode.window.createTerminal('My Terminal');
-    
-        // // Send the code to the terminal
-        // terminal.sendText(commandToExecute);
-    
-        // // Show and focus the terminal
-        // terminal.show();
 
-   
-        return new Promise((resolve, reject) => {
-        exec(commandToExecute, (error, stdout, stderr) => {
-            if (error) {
-                console.error(`Error executing command: ${error.message}`);
-                return;
-            }
-            if (stderr) {
-                console.error(`Command stderr: ${stderr}`);
-                return;
-            }
-            
-            outputChannel.appendLine("Developed by Pradeep Sahu");
-            outputChannel.appendLine("Link: https://www.linkedin.com/in/pradeep-sahu-759720224/");
-                // Show the output channel
-            // outputChannel.show();
-        })});
-
-   
-
-}
 
 function activate(context) {
 
@@ -173,36 +104,8 @@ function activate(context) {
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
 	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('c-c---code-runner-for-mac.c_c++CodeRunner',function () {
-		// The code you place here will be executed every time your command is executed
-
-		// Display a message box to the user
-
-		const editor = vscode.window.activeTextEditor;
-
-        if (editor) {
-            // Access information about the current file
-			const document = editor.document;
-            const fileName = editor.document.fileName;
-            const languageId = editor.document.languageId;
-			// getting the current file directory / folder.
-			const filePath = path.dirname(document.fileName);
-
-            // Display information in the VS Code output channel
-			
-			// execute command.
-			//  moveToDirectory(fileName);
-            
-			// const fileName = path.basename(document.fileName, path.extname(document.fileName));
-			executeCommand(fileName);
-
-            
-
-            // vscode.window.showInformationMessage(`Current File: ${fileName}, Language: ${languageId}`);
-            vscode.window.showInformationMessage(`Current File: ${filePath}, Language: ${languageId}`);
-        } else {
-            vscode.window.showWarningMessage('No active text editor.');
-        }
+	let disposable = vscode.commands.registerCommand('c-c---code-runner-for-mac.c_c++CodeRunner', function () {
+       runTheCode();
     });
 
     let another = vscode.commands.registerCommand('c-c---code-runner-for-mac.c_c++CodeDelete',function(){
@@ -248,15 +151,14 @@ function activate(context) {
     });
    
 
-	// context.subscriptions.push(disposable);
+	context.subscriptions.push(disposable);
+    context.subscriptions.push(another);
+    context.subscriptions.push(other);
 }
 
 
 
-function getFilenameWithoutExtension(filename) {
-    // Use the path module to extract the filename without extension
-    return path.parse(filename).name;
-}
+
 
 
 

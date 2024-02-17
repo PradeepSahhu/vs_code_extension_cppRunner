@@ -3,7 +3,8 @@
   "displayName": "Utility_Extension",
   "description": "Sometimes latest c/c++ code doesn't work on macbooks hence create this to execute the latest c/c++ code in visual studio code. ",
   "publisher": "MacCodeRunner",
-  "version": "1.1.4",
+  "author": "Pradeep Sahu",
+  "version": "1.2.0",
   "engines": {
     "vscode": "^1.82.0"
   },
@@ -12,8 +13,10 @@
     "Other"
   ],
   "activationEvents": [
-    
-   
+    "onCommand:c-c---code-runner-for-mac.c_c++CodeRunner",
+    "onCommand:c-c---code-runner-for-mac.c_c++CodeDelete",
+    "onCommand:c-c---code-runner-for-mac.c_c++CodeCopy",
+    "onCommand:c-c---code-runner-for-mac.c_c++GitIt"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -35,7 +38,13 @@
       "title": "git it"
     }
   ]
-  },
+  },"permissions": [
+    "activeTextEditor",
+    "window",
+    "workspace",
+    "terminal",
+    "fileSystem"
+  ],
   "scripts": {
     "lint": "eslint .",
     "pretest": "npm run lint",
@@ -46,6 +55,7 @@
     "type": "git",
     "url": "https://github.com/PradeepSahhu/vs_code_extension_cppRunner"
   },
+  "license": "MIT",
   "devDependencies": {
     "@types/vscode": "^1.82.0",
     "@types/mocha": "^10.0.6",
@@ -53,6 +63,7 @@
     "eslint": "^8.56.0",
     "typescript": "^5.3.3",
     "@vscode/test-cli": "^0.0.4",
-    "@vscode/test-electron": "^2.3.8"
+    "@vscode/test-electron": "^2.3.8",
+    "simple-git": "^3.5.0"
   }
 }
