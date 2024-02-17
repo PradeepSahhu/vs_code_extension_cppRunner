@@ -3,6 +3,7 @@
 const vscode = require('vscode');
 const { exec } = require('child_process');
 const path = require('path');
+const simpleGit = require('simple-git');
 const fs = require('fs');
 
 // This method is called when your extension is activated
@@ -12,65 +13,46 @@ const fs = require('fs');
  * @param {vscode.ExtensionContext} context
  */
 
-
-function executeCommand(fileName){
-    
+async function executeCommand(fileName) {
     const editor = vscode.window.activeTextEditor;
-	// const commandToExecute = `echo "Processing file: ${filename}"`;
-
     const outputChannel = vscode.window.createOutputChannel('My Extension Output');
-    const fileWithoutExtension = removeExtensionFromFilePath(fileName);
+    const fileWithoutExtension = await removeExtensionFromFilePath(fileName);
+    const commandToExecute = `g++ -std=c++11 ${fileName} -o ${fileWithoutExtension}`;
 
-    // const fileNameWithoutEx = getFilenameWithoutExtension(fileName);
-	const commandToExecute = `g++ -std=c++11 ${fileName} -o ${fileWithoutExtension}`;
+    // Append a message to the output channel
+    outputChannel.appendLine("Developed By Pradeep Sahu");
+    outputChannel.appendLine("Link : https://www.linkedin.com/in/pradeep-sahu-759720224/")
 
-        // Append a message to the output channel
-        outputChannel.appendLine("Developed By Pradeep Sahu");
-        outputChannel.appendLine("Link : https://www.linkedin.com/in/pradeep-sahu-759720224/")
-        // outputChannel.appendLine(path.dirname(fileWithoutExtension));
-    // outputChannel.appendLine(fileName);
-    // outputChannel.appendLine(path.dirname(fileName));
-
-        // Show the output channel
-      
-        // outputChannel.show();
-        
-   
     console.log(fileName);
 
-    // const parsedPath = path.parse(fileName);
-    // const fileNameWithoutEx = parsedPath.name;
-
-	
-
-    // return new Promise((resolve, reject) => {
-    //     exec(commandToExecute, (error, stdout, stderr) => {
-    //         if (error) {
-    //             console.error(`Error executing command: ${error.message}`);
-    //             reject(error);
-    //         } else {
-    //             console.log(`Command stdout: ${stdout}`);
-    //             console.error(`Command stderr: ${stderr}`);
-    //             resolve({ stdout, stderr });
-    //         }
-    //     });
-    // });
-
     // Execute the command
-    return new Promise((resolve, reject) => {
-    exec(commandToExecute, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Error executing command: ${error.message}`);
-            return;
-        }
+    try {
+        const { stdout, stderr } = await new Promise((resolve, reject) => {
+            exec(commandToExecute, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`Error executing command: ${error.message}`);
+                    reject(error);
+                } else {
+                    console.log(`Command stdout: ${stdout}`);
+                    console.error(`Command stderr: ${stderr}`);
+                    resolve({ stdout, stderr });
+                }
+            });
+        });
+
+        // Check if there's any stderr
         if (stderr) {
             console.error(`Command stderr: ${stderr}`);
             return;
         }
+
+        // If successful, run the file
         runFile(fileName);
-        console.log(`Command stdout: ${stdout}`);
-    })});
+    } catch (error) {
+        console.error(`Error executing command: ${error.message}`);
+    }
 }
+
 
 function moveToDirectory(filePath){
 
@@ -122,10 +104,15 @@ function checkForKeywordInFile(filePath, keyword) {
     }
 }
 
-function executeCommandInTerminal(command) {
+async function executeCommandInTerminal(command) {
     try {
-        // Create a terminal
-        const terminal = vscode.window.createTerminal();
+        // Check if a terminal with the name 'MyExtensionTerminal' exists
+        let terminal = vscode.window.terminals.find(term => term.name === 'TerminalSahu');
+
+        // If no terminal exists, create a new one
+        if (!terminal) {
+            terminal = vscode.window.createTerminal('TerminalSahu');
+        }
 
         // Send the command to the terminal
         terminal.sendText(command);
@@ -136,6 +123,7 @@ function executeCommandInTerminal(command) {
         vscode.window.showErrorMessage(`Error executing command: ${error.message}`);
     }
 }
+
 
 function runFile(fileName){
     
@@ -252,6 +240,12 @@ function activate(context) {
         
 
     });
+
+    let gits = vscode.commands.registerCommand('c-c---code-runner-for-mac.c_c++GitIt',async function(){
+
+        commitToGitHub();
+        
+    });
    
 
 	// context.subscriptions.push(disposable);
@@ -344,6 +338,68 @@ async function copyFile(){
 
 
 }
+
+
+//! Commiting to Github Function.
+async function commitToGitHub() {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders || workspaceFolders.length === 0) {
+        vscode.window.showErrorMessage('No workspace opened.');
+        return;
+    }
+
+    const rootPath = workspaceFolders[0].uri.fsPath;
+
+    const git = simpleGit(rootPath);
+
+    // Check if Git is initialized
+    const isGitInitialized = await git.checkIsRepo();
+    if (!isGitInitialized) {
+        // If not initialized, initialize Git
+        await git.init();
+
+        vscode.window.showInformationMessage('Git repository initialized.');
+    }
+
+    // Check if there's a remote repository
+    const remotes = await git.getRemotes(true);
+    const remoteExists = remotes.some(remote => remote.name === 'origin');
+
+    if (!remoteExists) {
+        // Prompt user to enter repository URL
+        const repositoryUrl = await vscode.window.showInputBox({
+            prompt: 'Enter the URL of the remote repository:'
+        });
+
+        if (!repositoryUrl) {
+            return; // User canceled input
+        }
+
+        // Add the remote repository
+        await git.addRemote('origin', repositoryUrl);
+
+        vscode.window.showInformationMessage('Remote repository added.');
+    }
+
+    // Ask for commit message
+    const commitMessage = await vscode.window.showInputBox({
+        prompt: 'Enter the commit message:'
+    });
+
+    if (!commitMessage) {
+        return; // User canceled input
+    }
+
+    // Commit changes
+    await git.add('./*');
+    await git.commit(commitMessage);
+
+    // Push to the remote repository
+    await git.push(['-u', 'origin', 'master']);
+
+    vscode.window.showInformationMessage('Changes committed and pushed to GitHub.');
+}
+
 
 async function createNewFile(filePath, content) {
     try {

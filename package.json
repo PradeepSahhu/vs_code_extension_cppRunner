@@ -3,7 +3,7 @@
   "displayName": "c/c++ code runner for mac",
   "description": "Sometimes latest c/c++ code doesn't work on macbooks hence create this to execute the latest c/c++ code in visual studio code. ",
   "publisher": "MacCodeRunner",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "engines": {
     "vscode": "^1.82.0"
   },
@@ -29,6 +29,10 @@
     {
       "command":"c-c---code-runner-for-mac.c_c++CodeCopy",
       "title": "copy it"
+    },
+    {
+      "command":"c-c---code-runner-for-mac.c_c++GitIt",
+      "title": "git it"
     }
   ]
   },
